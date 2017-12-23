@@ -1,0 +1,53 @@
+group 'bs'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'jacoco'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compile group: 'org.mongodb', name: 'mongo-java-driver', version: '3.5.0'
+}
+
+task codeCoverageReport(type: JacocoReport) {
+    def coverageSourceDirs = [
+            'src/main/java',
+    ]
+    executionData = fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
+    classDirectories = fileTree(dir: "${project.buildDir}/classes/java/main")
+    sourceDirectories = files(coverageSourceDirs)
+
+    subprojects.each {
+        sourceSets it.sourceSets.main
+    }
+
+    reports {
+        xml.enabled true
+        html.enabled false
+        csv.enabled false
+    }
+}
+
+codeCoverageReport.dependsOn {
+    subprojects*.task(test)
+}
+
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        html.enabled false
+    }
+}
+
+check.dependsOn jacocoTestReport
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.1'
+}
